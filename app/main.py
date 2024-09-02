@@ -14,10 +14,10 @@ class ProjectSettings(BaseSettings):
 def register_exception(application):
     @application.exception_handler(RequestValidationError)
     async def validation_exception_handler(request, exc):
-        exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+        exc_str = f"{exc}".replace("\n", " ").replace("   ", " ")
         # or logger.error(f'{exc}')
-        logger.debug(f'{exc}')
-        content = {'status_code': 422, 'message': exc_str, 'data': None}
+        logger.debug(f"{exc}")
+        content = {"status_code": 422, "message": exc_str, "data": None}
         return JSONResponse(
             content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
@@ -26,19 +26,17 @@ def register_exception(application):
 def register_cors(application):
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=['*'],
+        allow_origins=["*"],
         allow_credentials=True,
-        allow_methods=['*'],
-        allow_headers=['*'],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
 
 def init_web_application():
     project_settings = ProjectSettings()
     application = FastAPI(
-        openapi_url='/api/openapi.json',
-        docs_url='/api/docs',
-        redoc_url='/api/redoc'
+        openapi_url="/api/openapi.json", docs_url="/api/docs", redoc_url="/api/redoc"
     )
 
     if project_settings.LOCAL_MODE:

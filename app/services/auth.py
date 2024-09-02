@@ -1,11 +1,7 @@
-import uuid
-from typing import Optional
-
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+import os
 
-from fastapi import Depends, Request, HTTPException, Response
+from fastapi import Depends
 from fastapi_users import BaseUserManager, IntegerIDMixin
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import (
@@ -13,13 +9,12 @@ from fastapi_users.authentication import (
     BearerTransport,
     JWTStrategy,
 )
-from fastapi_users.password import PasswordHelper
 from fastapi_users.db import SQLAlchemyUserDatabase
 
 from app.db.tables import User
 from app.db.base import get_session
 
-SECRET = "SECRET"
+SECRET = os.getenv("AUTH_SECRET")
 
 bearer_transport = BearerTransport(tokenUrl="/api/auth/login")
 

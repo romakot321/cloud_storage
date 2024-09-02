@@ -1,7 +1,4 @@
-from pydantic import BaseModel, ConfigDict, model_validator
-import datetime as dt
-from itertools import groupby
-import operator
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 
 from .base import BaseFiltersSchema
@@ -37,4 +34,3 @@ class ItemFiltersSchema(BaseFiltersSchema):
 
 class ItemUpdateSchema(BaseModel):
     name: str | None = None
-

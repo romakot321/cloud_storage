@@ -11,13 +11,17 @@ class ItemRepository(BaseRepository):
         return await self._create(model)
 
     async def get_one(
-            self,
-            item_id: int | None = None,
-            item_email: str | None = None,
-            mute_not_found_exception: bool = False
+        self,
+        item_id: int | None = None,
+        item_email: str | None = None,
+        mute_not_found_exception: bool = False,
     ) -> Item:
-        filters = {k: v for k, v in (('id', item_id), ('email', item_email)) if v is not None}
-        return await self._get_one(**filters, mute_not_found_exception=mute_not_found_exception)
+        filters = {
+            k: v for k, v in (("id", item_id), ("email", item_email)) if v is not None
+        }
+        return await self._get_one(
+            **filters, mute_not_found_exception=mute_not_found_exception
+        )
 
     async def get_many(self, **filters) -> list[Item]:
         return list(await self._get_many(**filters))
@@ -31,5 +35,3 @@ class ItemRepository(BaseRepository):
     async def get_owner_id(self, item_id: int) -> int | None:
         query = select(Item.owner_id).filter_by(id=item_id)
         return await self.session.scalar(query)
-
-

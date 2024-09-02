@@ -11,13 +11,17 @@ class UserRepository(BaseRepository):
         return await self._create(model)
 
     async def get_one(
-            self,
-            user_id: int | None = None,
-            user_email: str | None = None,
-            mute_not_found_exception: bool = False
+        self,
+        user_id: int | None = None,
+        user_email: str | None = None,
+        mute_not_found_exception: bool = False,
     ) -> User:
-        filters = {k: v for k, v in (('id', user_id), ('email', user_email)) if v is not None}
-        return await self._get_one(**filters, mute_not_found_exception=mute_not_found_exception)
+        filters = {
+            k: v for k, v in (("id", user_id), ("email", user_email)) if v is not None
+        }
+        return await self._get_one(
+            **filters, mute_not_found_exception=mute_not_found_exception
+        )
 
     async def get_many(self, **filters) -> list[User]:
         return list(await self._get_many(**filters))
@@ -31,5 +35,3 @@ class UserRepository(BaseRepository):
     async def get_owner_id(self, user_id: int) -> int | None:
         query = select(User.owner_id).filter_by(id=user_id)
         return await self.session.scalar(query)
-
-

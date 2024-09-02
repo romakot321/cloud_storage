@@ -1,4 +1,3 @@
-import uuid
 from typing import Self
 from typing import TypedDict
 
@@ -27,18 +26,20 @@ class TableAttributeWithSubqueryLoad(TypedDict):
     children: list[TableAttr]
 
 
-type TableAttributesType = TableAttr | TableAttributeWithSubqueryLoad | list[
-    TableAttr | TableAttributeWithSubqueryLoad
-    ]
+type TableAttributesType = (
+    TableAttr
+    | TableAttributeWithSubqueryLoad
+    | list[TableAttr | TableAttributeWithSubqueryLoad]
+)
 
 
 class BaseRepository[Table: BaseTable]:
     base_table: Table
 
     def __init__(
-            self,
-            response: Response = Response,
-            session: AsyncSession = Depends(get_session)
+        self,
+        response: Response = Response,
+        session: AsyncSession = Depends(get_session),
     ):
         self.response = response
         self._session_creator = None
@@ -56,20 +57,17 @@ class BaseRepository[Table: BaseTable]:
         raise NotImplementedError
 
     async def _get_many(
-            self,
-            page: int = 0,
-            count: int = 1000,
-            **filters
+        self, page: int = 0, count: int = 1000, **filters
     ) -> ScalarResult[Table]:
         query = self._get_many_query(page, count, **filters)
         return await self.session.scalars(query)
 
     def _get_many_query(
-            self,
-            page: int = 0,
-            count: int = 1000,
-            order_by: ColumnOperators | None = None,
-            **filters
+        self,
+        page: int = 0,
+        count: int = 1000,
+        order_by: ColumnOperators | None = None,
+        **filters,
     ) -> Select:
         offset = page * count
         query = select(self.base_table)
@@ -83,37 +81,31 @@ class BaseRepository[Table: BaseTable]:
 
     @staticmethod
     def _query_select_in_load(
-            query: Select,
-            table_attributes: TableAttributesType
+        query: Select, table_attributes: TableAttributesType
     ) -> Select:
         if not isinstance(table_attributes, list):
             table_attributes = [table_attributes]
         select_in_loads = []
         for table_attr in table_attributes:
             if isinstance(table_attr, dict):
-                select_in_load = selectinload(table_attr['parent'])
-                for table_attr_child in table_attr['children']:
+                select_in_load = selectinload(table_attr["parent"])
+                for table_attr_child in table_attr["children"]:
                     select_in_load.subqueryload(table_attr_child)
                 select_in_loads.append(select_in_load)
             else:
                 select_in_loads.append(selectinload(table_attr))
-        query = query.options(
-            *select_in_loads
-        )
+        query = query.options(*select_in_loads)
         return query
 
-    def _select_in_load(
-            self,
-            select_in_load: TableAttributesType
-    ) -> Select:
+    def _select_in_load(self, select_in_load: TableAttributesType) -> Select:
         query = select(self.base_table)
         return self._query_select_in_load(query, select_in_load)
 
     async def _get_one(
-            self,
-            select_in_load: TableAttributesType | None = None,
-            mute_not_found_exception: bool = False,
-            **filters
+        self,
+        select_in_load: TableAttributesType | None = None,
+        mute_not_found_exception: bool = False,
+        **filters,
     ) -> Table:
         query = self._filter(**filters)
         if select_in_load is not None:
@@ -144,7 +136,7 @@ class BaseRepository[Table: BaseTable]:
         for key, value in kwargs.items():
             if value is None:
                 continue
-            filter_ = '%{}%'.format(value)
+            filter_ = "%{}%".format(value)
             query = query.filter(getattr(self.base_table, key).like(filter_))
         return query
 
@@ -154,33 +146,31 @@ class BaseRepository[Table: BaseTable]:
                 await self.session.commit()
             except exc.IntegrityError as e:
                 await self.session.rollback()
-                if 'is not present in table' in str(e.orig):
-                    message = str(e.orig).split(':  Key ')[1].strip().capitalize()
+                if "is not present in table" in str(e.orig):
+                    message = str(e.orig).split(":  Key ")[1].strip().capitalize()
                     raise HTTPException(status_code=404, detail=message)
                 logger.exception(e)
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
     async def _update(
-            self,
-            primary_key: int,
-            object_schema: BaseModel | None = None,
-            write_none: bool = False,
-            do_commit: bool = True,
-            **kwargs
+        self,
+        primary_key: int,
+        object_schema: BaseModel | None = None,
+        write_none: bool = False,
+        do_commit: bool = True,
+        **kwargs,
     ) -> Table:
         obj = await self._get_one(id=primary_key)
-        await self._update_obj(
-            obj, object_schema, write_none, do_commit, **kwargs
-        )
+        await self._update_obj(obj, object_schema, write_none, do_commit, **kwargs)
         return await self._get_one(id=primary_key)
 
     async def _update_obj(
-            self,
-            obj: Table,
-            object_schema: BaseModel | None = None,
-            write_none: bool = False,
-            do_commit: bool = True,
-            **kwargs
+        self,
+        obj: Table,
+        object_schema: BaseModel | None = None,
+        write_none: bool = False,
+        do_commit: bool = True,
+        **kwargs,
     ) -> Table:
         if object_schema is None:
             object_schema = {}
@@ -205,15 +195,10 @@ class BaseRepository[Table: BaseTable]:
         return obj
 
     async def _create(
-            self,
-            model: Table | None = None,
-            do_commit: bool = True,
-            **kwargs
+        self, model: Table | None = None, do_commit: bool = True, **kwargs
     ) -> Table:
         if model is None:
-            model = self.base_table(
-                **kwargs
-            )
+            model = self.base_table(**kwargs)
         self.session.add(model)
         if do_commit:
             await self.commit()
@@ -246,9 +231,7 @@ class BaseRepository[Table: BaseTable]:
                 pass
 
     async def child(
-            self,
-            response: Response | None = None,
-            session: AsyncSession | None = None
+        self, response: Response | None = None, session: AsyncSession | None = None
     ) -> Self:
         if session is not None:
             self.session = session
